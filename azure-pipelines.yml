@@ -1,0 +1,137 @@
+trigger:
+  branches:
+    include:
+    - main
+
+pool:
+  vmImage: ubuntu-latest
+
+parameters:
+  - name: env
+    displayName: Environment to deploy to
+    type: string
+    default: 'dev'
+    values:
+    - 'dev'
+    - 'qa'
+    - 'staging'
+    - 'prod'
+    # complex objects cannot be kept in variables so this has to be a param instead, not actually expecting it to be changed at runtime
+  - name: serviceDetails
+    type: object
+    displayName: Do not edit!
+    default:
+    - name: OpenAI
+      varGroupName:  OpenAI
+      keyVarPrefix: openai_key_
+      endpointVarPrefix: openai_endpoint_
+      resourceNameVar: openAI
+      keySecretName: ail-openai-key
+      endpointSecretName: ail-openai-endpoint
+      endpointSuffix: .openai.azure.com/
+    
+variables:
+  - name: devOpsOrg
+    value: https://dev.azure.com/ioncompliance/
+  - name: devOpsProject
+    value: iON Compliance Data Science
+    # the location here does not get passed to the script itself, it's just for the deployment
+  - name: deploymentLocation
+    value: centralus
+  - name: azureSubscription
+    ${{ if contains('dev;qa', parameters['env']) }}:
+      value: AIL_MLE_DEV
+    ${{ else }}:
+      value: AIL_MLE_PROD
+stages:
+  - stage: ${{ parameters.env }}
+    displayName: "Deploy ${{ parameters.env }} resources"
+    jobs:
+      - job: "deploy"
+        displayName: "Creating ${{ parameters.env }} resources"
+        steps:
+          - checkout: self
+            displayName: "Checking out template code from GitHub"
+
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: ${{ variables.azureSubscription }}
+              scriptType: pscore
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment sub create --what-if --location ${{ variables.deploymentLocation }} --name cognitive_services_deployment_${{ parameters.env }} --template-file templates/main.bicep --parameters environment=${{ parameters.env }}
+            displayName: "Validating the deployment template"
+
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: ${{ variables.azureSubscription }}
+              scriptType: pscore
+              scriptLocation: inlineScript
+              inlineScript: |
+                $out = az deployment sub create --location ${{ variables.deploymentLocation }} --name cognitive_services_deployment_${{ parameters.env }} --template-file templates/main.bicep --parameters environment=${{ parameters.env }} | convertfrom-json | foreach properties | foreach outputs
+                $outputs = [PSCustomObject]@{}
+                $out | Get-Member -MemberType NoteProperty | ForEach-Object {
+                    $name = $_.name
+                    $outputs | Add-Member -MemberType NoteProperty -Name $name -value $out.$name.value
+                }
+                echo $outputs
+                $computerVision = $outputs.computerVision
+                $openAI = $outputs.openAI
+                $servicesGroup = $outputs.rg
+                $formRecognizer = $outputs.formRecognizer
+                $keyVault = $outputs.keyVault
+                Write-Host "##vso[task.setvariable variable=computerVision;]$computerVision"
+                Write-Host "##vso[task.setvariable variable=openAI;]$openAI"
+                Write-Host "##vso[task.setvariable variable=formRecognizer;]$formRecognizer"
+                Write-Host "##vso[task.setvariable variable=servicesGroup;]$servicesGroup"
+                Write-Host "##vso[task.setvariable variable=keyVault;]$keyVault"
+            displayName: "Deploying services"
+
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: ${{ variables.azureSubscription }}
+              scriptType: pscore
+              scriptLocation: inlineScript
+              # explicitly allowing network access here again as it's not recovered from the template when reprovisioning
+              inlineScript: |
+                  az keyvault update --name $(keyVault) --resource-group $(servicesGroup) --default-action Allow
+            displayName: "Unlocking key vault network access"
+
+          - ${{ each service in parameters.serviceDetails }}: 
+            - task: AzureCLI@2
+              inputs:
+                azureSubscription: ${{ variables.azureSubscription }}
+                scriptType: pscore
+                scriptLocation: inlineScript
+                failOnStandardError: true
+                inlineScript: |
+                  $keys = az cognitiveservices account keys list --name $(${{ service.resourceNameVar }}) -g $(servicesGroup) | convertfrom-json
+
+                  az keyvault secret set --name ${{ service.keySecretName }}1 --vault-name $(keyVault) --value $keys.key1
+                  az keyvault secret set --name ${{ service.keySecretName }}2 --vault-name $(keyVault) --value $keys.key2
+                  az keyvault secret set --name ${{ service.endpointSecretName }} --vault-name $(keyVault) --value "https://$(${{ service.resourceNameVar }})${{ service.endpointSuffix }}"
+              displayName: "Updating ${{ service.name }} key and endpoint in key vault"
+
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: ${{ variables.azureSubscription }}
+              scriptType: pscore
+              scriptLocation: inlineScript
+              inlineScript: |
+                  az keyvault update --name $(keyVault) --resource-group $(servicesGroup) --default-action Deny
+            displayName: "Locking key vault network access"
+
+          - ${{ each service in parameters.serviceDetails }}: 
+            - task: AzureCLI@2
+              inputs:
+                azureSubscription: ${{ variables.azureSubscription }}
+                scriptType: pscore
+                scriptLocation: inlineScript
+                inlineScript: |
+                  $keys = az cognitiveservices account keys list --name $(${{ service.resourceNameVar }}) -g $(servicesGroup) | convertfrom-json
+
+                  echo $(System.AccessToken) | az devops login
+                  $groupID = $(az pipelines variable-group list --org "${{ variables.devOpsOrg }}" -p "${{ variables.devOpsProject }}" --group-name "${{ service.varGroupName }}" --query '[0].id' -o json)
+                  az pipelines variable-group variable update --group-id $groupID --org  "${{ variables.devOpsOrg }}" -p "${{ variables.devOpsProject }}" --name ${{ service.endpointVarPrefix }}${{ parameters.env }} --secret false --value "https://$(${{ service.resourceNameVar }})${{ service.endpointSuffix }}"
+                  az pipelines variable-group variable update --group-id $groupID --org  "${{ variables.devOpsOrg }}" -p "${{ variables.devOpsProject }}" --name ${{ service.keyVarPrefix }}${{ parameters.env }} --secret true --value $keys.key1
+              displayName: "Updating ${{ service.name }} key and endpoint in var groups"
