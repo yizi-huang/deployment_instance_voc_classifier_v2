@@ -1,4 +1,4 @@
-targetScope = 'subscription'
+targetScope = 'subscription' 
 
 @description('Role definition object.')
 param customUserRole object
