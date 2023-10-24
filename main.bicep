@@ -1,4 +1,4 @@
-targetScope = 'subscription' 
+targetScope = 'subscription'  
 
 @description('Environment name suffix for resources.')
 @allowed([
