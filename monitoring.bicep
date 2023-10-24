@@ -1,4 +1,4 @@
-targetScope = 'resourceGroup'
+targetScope = 'resourceGroup' 
 
 @description('Tags to assign to the resource.')
 param tags object
