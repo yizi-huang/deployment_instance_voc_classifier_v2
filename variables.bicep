@@ -1,4 +1,4 @@
-targetScope = 'subscription'
+targetScope = 'subscription' 
 
 @description('Azure Region in which to deploy the resources.')
 param shortLocation string
