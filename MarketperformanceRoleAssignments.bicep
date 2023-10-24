@@ -1,4 +1,4 @@
-targetScope = 'resourceGroup'
+targetScope = 'resourceGroup' 
 
 @description('Users with their respective IDs from Azure Active Directory. More users can be added here, depending on requirements.')
 param users array
