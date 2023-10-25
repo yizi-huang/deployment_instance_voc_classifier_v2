@@ -31,7 +31,7 @@ var vnetRules = [for net in subnets: {id: net}]
 resource OpenAI_voc_classifier_v2 'Microsoft.CognitiveServices/accounts@2022-03-01' = {
   name: name
   location: location
-  kind: 'OpenAI_voc_classifier_v2'
+  kind: 'OpenAI'
   sku: {
     name: sku
   }

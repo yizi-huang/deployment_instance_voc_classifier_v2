@@ -9,16 +9,13 @@ targetScope = 'subscription'
 ])
 param environment string = 'dev'
 
-@description('Email address of the distribution list used for sending alerts')
-param emailDistributionListForAlerts string
-
 @description('GUID used to generate unique deployment name suffixes')
 param deploymentNamesGuid string = newGuid()
 
 // 3-character suffix to add some uniqueness to deployment names
 var suffix = toLower(take(uniqueString(deploymentNamesGuid), 3))
 
-
+//It will be updated once we have the right repo name
 var tags  = {
   owner: 'AIL ML Engineering'
   purpose: 'Azure cognitive services used across projects: voc-classifier-v2'
@@ -51,7 +48,7 @@ module variables 'variables.bicep' = {
 }
 
 resource servicesResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
-  name: 'rg-ail-cognitive-services-${environment}-${shortRegionNames[location]}'
+  name: 'rg-ail-mp-voc-${environment}-${shortRegionNames[location]}'
   location: location
   tags: tags
 }
@@ -71,9 +68,8 @@ module logAnalytics 'loganalytics.bicep' = {
 module openAI 'openAI.bicep' = {
   dependsOn: [
     logAnalytics
-    monitoring
   ]
-  name: 'OpenAI_voc_classifier_v2'
+  name: 'openai_voc_classifier_v2'
   scope: servicesResourceGroup
   params: {
     location: variables.outputs.openai.location
@@ -87,28 +83,26 @@ module openAI 'openAI.bicep' = {
   }
 }
 
-module aideDsRoleDefinition 'roleDefinition.bicep' = {
-  name: 'aideDsRoleDefinition'
+module mpDsRoleDefinition 'roleDefinition.bicep' = {
+  name: 'mpDsRoleDefinition'
   params: {
-    customUserRole: variables.outputs.roles.aideds.role
+    customUserRole: variables.outputs.roles.mpds.role
   }
 }
 
-module aideRoleAssignments 'MarketperformanceRoleAssignments.bicep' = {
+module mpRoleAssignments 'mpRoleAssignments.bicep' = {
   dependsOn: [
     openAI
-    aideRoleAssignments 
+    mpDsRoleDefinition  
   ]
   scope: servicesResourceGroup
-  name: 'MarketperformanceRoleAssignments'
+  name: 'mpRoleAssignments'
   params: {
-    customAideRoleDefinitionId: aideRoleAssignments.outputs.customRoleDefinitionId
-    users: variables.outputs.roles.aideds.users
-    formRecognizerName: variables.outputs.formrec.serviceName
+    customMpRoleDefinitionId: mpDsRoleDefinition.outputs.customRoleDefinitionId
+    users: variables.outputs.roles.mpds.users
     openAIName: variables.outputs.openai.serviceName
   }
 }
-
 
 module monitoring 'monitoring.bicep' = {
   scope: servicesResourceGroup
@@ -119,16 +113,6 @@ module monitoring 'monitoring.bicep' = {
     retentionDays: variables.outputs.logs.retentionDays
     tags: tags
     backendApplicationInsightsName: variables.outputs.logs.backendApplicationInsightsName
-    emailDistributionListForAlerts: emailDistributionListForAlerts
-  }
-}
-
-module variables 'variables.bicep' = {
-  name: 'variables'
-  scope: subscription()
-  params: {
-    shortLocation: shortRegionNames[location]
-    environment: environment
   }
 }
 
