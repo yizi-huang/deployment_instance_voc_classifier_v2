@@ -22,10 +22,10 @@ parameters:
     displayName: Do not edit!
     default:
     - name: OpenAI
-      varGroupName:  OpenAI
+      varGroupName:  openai_voc_classifier_v2
       keyVarPrefix: openai_key_
       endpointVarPrefix: openai_endpoint_
-      resourceNameVar: openAI
+      resourceNameVar: openA
       keySecretName: ail-openai-key
       endpointSecretName: ail-openai-endpoint
       endpointSuffix: .openai.azure.com/
