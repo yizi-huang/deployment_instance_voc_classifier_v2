@@ -66,5 +66,5 @@ output openai object = {
 output logs object = {
   workspaceName: 'logs-voc-ail-${environment}-${shortLocation}'
   retentionDays: 30
-  backendApplicationInsightsName: 'appi-voc-${environment}-${shortLocation}'
+  backendApplicationInsightsName: 'appi-voc-ail-${environment}-${shortLocation}'
 }
