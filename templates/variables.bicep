@@ -32,6 +32,9 @@ var mpDSUsers = [
   'fd8d1c97-fcc0-401f-a03d-025313275941'
 ]
 
+var modelName = 'gpt-35-turbo-16k'
+var modelType = 'gpt-35-turbo'
+
 // AILabs Devs and QA may need to read keys and ping the services
 var customMpDSUserRole = {
   roleName: 'custom-mp-voc-user-${subSuffix}'
@@ -63,21 +66,21 @@ output openai object = {
   allowPublicAccess: environment == 'dev' ? true : false
   modelConfig: {
     modelType:  modelType
-    modelName: openai_voc_classifier_v2
+    modelName: modelName
     temperature: 0
     topP: 1
     maxTokens: 1000
     stopSequence: ''
     systemMessage: 'You are an AI assistant that helps people find information.'
-    apiVersion: '2023-05-15'
+    apiVersion: '2023-06-01-preview'
     stream: true
   }
   deployments: [
     {
-      name: 'gpt-35-turbo'
+      name: modelType
       model: {
         format: 'OpenAI'
-        name: openai_voc_classifier_v2
+        name: modelName
         version: '0613'
       }
       capacity: 30
