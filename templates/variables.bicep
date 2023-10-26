@@ -61,6 +61,28 @@ output openai object = {
   ]
   location: environment == 'dev' ? 'northeurope' : 'eastus'
   allowPublicAccess: environment == 'dev' ? true : false
+  modelConfig: {
+    modelType:  modelType
+    modelName: openai_voc_classifier_v2
+    temperature: 0
+    topP: 1
+    maxTokens: 1000
+    stopSequence: ''
+    systemMessage: 'You are an AI assistant that helps people find information.'
+    apiVersion: '2023-05-15'
+    stream: true
+  }
+  deployments: [
+    {
+      name: 'gpt-35-turbo'
+      model: {
+        format: 'OpenAI'
+        name: openai_voc_classifier_v2
+        version: '0613'
+      }
+      capacity: 30
+    }
+  ]
 }
 
 output logs object = {
