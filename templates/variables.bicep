@@ -32,8 +32,9 @@ var mpDSUsers = [
   'fd8d1c97-fcc0-401f-a03d-025313275941'
 ]
 
-var modelName = 'gpt-35-turbo'
-var modelType = 'gpt-35-turbo-16k'
+var modelName = 'gpt-35-turbo-16k'
+var modelType = 'Standard'
+
 // AILabs Devs and QA may need to read keys and ping the services
 var customMpDSUserRole = {
   roleName: 'custom-mp-voc-user-${subSuffix}'
@@ -71,7 +72,7 @@ output openai object = {
     maxTokens: 1000
     stopSequence: ''
     systemMessage: 'You are an AI assistant that helps people find information.'
-    apiVersion: '2023-06-01-preview'
+    apiVersion: '2023-07-01-preview'
     stream: true
   }
   deployments: [
