@@ -22,7 +22,7 @@ parameters:
     displayName: Do not edit!
     default:
     - name: OpenAI
-      varGroupName:  openai_voc_classifier_v2
+      varGroupName:  OpenAI
       keyVarPrefix: openai_key_
       endpointVarPrefix: openai_endpoint_
       resourceNameVar: openA
