@@ -33,7 +33,7 @@ var mpDSUsers = [
 ]
 
 var modelName = 'turbo'
-var modelType = 'gpt-35-turbo-16k'
+var modelType = 'gpt-35-turbo'
 
 // AILabs Devs and QA may need to read keys and ping the services
 var customMpDSUserRole = {
@@ -62,7 +62,7 @@ output openai object = {
   allowedSubnets: [
     k8sSubnet.id
   ]
-  location: environment == 'dev' ? 'uksouth' : 'eastus'
+  location: environment == 'dev' ? 'uksouth' : 'eastus' 
   exemptionName: 'openai-location-exemption'
   allowPublicAccess: environment == 'dev' ? true : false
   modelConfig: {
