@@ -32,8 +32,8 @@ var mpDSUsers = [
   'fd8d1c97-fcc0-401f-a03d-025313275941'
 ]
 
-var modelName = 'turbo'
-var modelType = 'gpt-35-turbo'
+var modelName = 'gpt-35-turbo'
+var modelType = 'turbo'
 
 // AILabs Devs and QA may need to read keys and ping the services
 var customMpDSUserRole = {
