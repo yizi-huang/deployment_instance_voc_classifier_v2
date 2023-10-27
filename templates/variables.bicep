@@ -63,6 +63,7 @@ output openai object = {
     k8sSubnet.id
   ]
   location: environment == 'dev' ? 'westeurope' : 'eastus'
+  exemptionName: 'openai-location-exemption'
   allowPublicAccess: environment == 'dev' ? true : false
   modelConfig: {
     modelType:  modelType

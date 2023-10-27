@@ -65,8 +65,18 @@ module logAnalytics 'loganalytics.bicep' = {
   }
 }
 
+module generalPolicyExemption 'exemption.bicep' = {
+  name: 'cognitive-services-general-pe'
+  scope: servicesResourceGroup
+  params:{
+    exemptionAssignment: 'general-pa'
+    exemptionName: variables.outputs.openai.exemptionName
+  }
+}
+
 module openAI 'openAI.bicep' = {
   dependsOn: [
+    generalPolicyExemption
     logAnalytics
   ]
   name: 'openai_voc_classifier_v2'
