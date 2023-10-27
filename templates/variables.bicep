@@ -57,12 +57,12 @@ output roles object = {
 
 
 output openai object = {
-  serviceName: environment == 'dev' ? 'openai-ail-voc-${environment}-weu' : 'openai-ail-voc-${environment}-eus'
+  serviceName: environment == 'dev' ? 'openai-ail-voc-${environment}-uks' : 'openai-ail-voc-${environment}-eus'
   sku: 'S0'
   allowedSubnets: [
     k8sSubnet.id
   ]
-  location: environment == 'dev' ? 'westeurope' : 'uksouth'
+  location: environment == 'dev' ? 'uksouth' : 'eastus'
   exemptionName: 'openai-location-exemption'
   allowPublicAccess: environment == 'dev' ? true : false
   modelConfig: {
