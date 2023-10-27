@@ -62,7 +62,7 @@ output openai object = {
   allowedSubnets: [
     k8sSubnet.id
   ]
-  location: environment == 'dev' ? 'northeurope' : 'eastus'
+  location: environment == 'dev' ? 'westeurope' : 'eastus'
   allowPublicAccess: environment == 'dev' ? true : false
   modelConfig: {
     modelType:  modelType
