@@ -19,7 +19,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2020-10
   properties: {
     retentionInDays: retentionDays
     sku: {
-      name: 'Standard'
+      name: 'Standalone'
     }
   }
 }

@@ -15,8 +15,6 @@ param retentionDays int
 @description('Name of the Application Insights resource for the backend Web App')
 param backendApplicationInsightsName string
 
-@description('Email address of the distribution list used for sending alerts')
-param emailDistributionListForAlerts string
 
 // TODO evaluate what tier to use
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
@@ -56,21 +54,6 @@ resource backendAppInsights 'microsoft.insights/components@2020-02-02' = {
   }
 }
 
-resource notifyByEmailActionGroup 'microsoft.insights/actionGroups@2022-06-01' = {
-  name: 'Notify by Email'
-  location: 'Global'
-  properties: {
-    groupShortName: 'notifyemail'
-    enabled: true
-    emailReceivers: [
-      {
-        name: 'Email distribution list for UL Chatbot alerts'
-        emailAddress: emailDistributionListForAlerts
-      }
-    ]
-  }
-}
 
 output logAnalyticsWorkspaceId string = logAnalyticsWorkspace.id
 output backendApplicationInsightsName string = backendAppInsights.name
-output actionGroupId string = notifyByEmailActionGroup.id

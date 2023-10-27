@@ -21,8 +21,8 @@ parameters:
     type: object
     displayName: Do not edit!
     default:
-    - name: OpenAI
-      varGroupName:  OpenAI
+    - name: openai_voc_classifier_v2
+      varGroupName:  openai_voc_classifier_v2
       keyVarPrefix: openai_key_
       endpointVarPrefix: openai_endpoint_
       resourceNameVar: openA
@@ -75,51 +75,11 @@ stages:
                     $outputs | Add-Member -MemberType NoteProperty -Name $name -value $out.$name.value
                 }
                 echo $outputs
-                $computerVision = $outputs.computerVision
                 $openAI = $outputs.openAI
                 $servicesGroup = $outputs.rg
-                $formRecognizer = $outputs.formRecognizer
-                $keyVault = $outputs.keyVault
-                Write-Host "##vso[task.setvariable variable=computerVision;]$computerVision"
                 Write-Host "##vso[task.setvariable variable=openAI;]$openAI"
-                Write-Host "##vso[task.setvariable variable=formRecognizer;]$formRecognizer"
                 Write-Host "##vso[task.setvariable variable=servicesGroup;]$servicesGroup"
-                Write-Host "##vso[task.setvariable variable=keyVault;]$keyVault"
             displayName: "Deploying services"
-
-          - task: AzureCLI@2
-            inputs:
-              azureSubscription: ${{ variables.azureSubscription }}
-              scriptType: pscore
-              scriptLocation: inlineScript
-              # explicitly allowing network access here again as it's not recovered from the template when reprovisioning
-              inlineScript: |
-                  az keyvault update --name $(keyVault) --resource-group $(servicesGroup) --default-action Allow
-            displayName: "Unlocking key vault network access"
-
-          - ${{ each service in parameters.serviceDetails }}: 
-            - task: AzureCLI@2
-              inputs:
-                azureSubscription: ${{ variables.azureSubscription }}
-                scriptType: pscore
-                scriptLocation: inlineScript
-                failOnStandardError: true
-                inlineScript: |
-                  $keys = az cognitiveservices account keys list --name $(${{ service.resourceNameVar }}) -g $(servicesGroup) | convertfrom-json
-
-                  az keyvault secret set --name ${{ service.keySecretName }}1 --vault-name $(keyVault) --value $keys.key1
-                  az keyvault secret set --name ${{ service.keySecretName }}2 --vault-name $(keyVault) --value $keys.key2
-                  az keyvault secret set --name ${{ service.endpointSecretName }} --vault-name $(keyVault) --value "https://$(${{ service.resourceNameVar }})${{ service.endpointSuffix }}"
-              displayName: "Updating ${{ service.name }} key and endpoint in key vault"
-
-          - task: AzureCLI@2
-            inputs:
-              azureSubscription: ${{ variables.azureSubscription }}
-              scriptType: pscore
-              scriptLocation: inlineScript
-              inlineScript: |
-                  az keyvault update --name $(keyVault) --resource-group $(servicesGroup) --default-action Deny
-            displayName: "Locking key vault network access"
 
           - ${{ each service in parameters.serviceDetails }}: 
             - task: AzureCLI@2

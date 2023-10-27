@@ -28,10 +28,10 @@ param deployments array = []
 
 var vnetRules = [for net in subnets: {id: net}]
 
-resource OpenAI_voc_classifier_v2 'Microsoft.CognitiveServices/accounts@2022-03-01' = {
+resource openai_voc_classifier_v2 'Microsoft.CognitiveServices/accounts@2022-03-01' = {
   name: name
   location: location
-  kind: 'OpenAI_voc_classifier_v2'
+  kind: 'OpenAI'
   sku: {
     name: sku
   }
@@ -54,7 +54,7 @@ resource OpenAI_voc_classifier_v2 'Microsoft.CognitiveServices/accounts@2022-03-
 
 resource diagnosticLogs 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: '${name}-diagnostics'
-  scope: OpenAI_voc_classifier_v2
+  scope: openai_voc_classifier_v2
   properties: {
     workspaceId: logAnalyticsID
     logs: [
@@ -69,7 +69,7 @@ resource diagnosticLogs 'Microsoft.Insights/diagnosticSettings@2021-05-01-previe
 
 @batchSize(1)
 resource deployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = [for deployment in deployments: {
-  parent: OpenAI_voc_classifier_v2
+  parent: openai_voc_classifier_v2
   name: deployment.name
   properties: {
     model: deployment.model
@@ -81,6 +81,6 @@ resource deployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01
   }
 }]
 
-output openAIName string = OpenAI_voc_classifier_v2.name
-output openAIKey1 string = OpenAI_voc_classifier_v2.listKeys().key1
-output openAIKey2 string = OpenAI_voc_classifier_v2.listKeys().key2
+output openAIName string = openai_voc_classifier_v2.name
+output openAIKey1 string = openai_voc_classifier_v2.listKeys().key1
+output openAIKey2 string = openai_voc_classifier_v2.listKeys().key2
