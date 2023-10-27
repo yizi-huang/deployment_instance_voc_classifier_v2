@@ -57,7 +57,7 @@ output roles object = {
 
 
 output openai object = {
-  serviceName: environment == 'dev' ? 'openai-ail-${environment}-neu' : 'openai-ail-${environment}-eus'
+  serviceName: environment == 'dev' ? 'openai-ail-${environment}-weu' : 'openai-ail-${environment}-eus'
   sku: 'S0'
   allowedSubnets: [
     k8sSubnet.id
